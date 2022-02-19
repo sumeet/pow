@@ -1,26 +1,22 @@
 use sha1::{Sha1,Digest};
-use std::hash::Hash;
 use std::process::exit;
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-type Nonce = u32;
+type Nonce = u16;
+
+fn sha1(bytes: &[u8]) -> Vec<u8> {
+    let mut hasher = Sha1::new();
+    hasher.update(bytes);
+    hasher.finalize().to_vec()
+}
 
 fn main() {
-    let nonce = rand::random::<Nonce>();
+    for _ in 0..10000 {
+        let nonce = rand::random::<Nonce>();
 
-    let mut hasher = Sha1::new();
-    hasher.update(nonce.to_ne_bytes());
-    let hash_to_match = hasher.finalize().to_vec();
-
-
-    (Nonce::MIN..=Nonce::MAX).into_par_iter().for_each(|n| {
-        let mut hasher = Sha1::new();
-        hasher.update(n.to_ne_bytes());
-        let hash = hasher.finalize().to_vec();
-
-        if hash == hash_to_match {
-            println!("Found nonce: {}", n);
-            exit(0);
-        }
-    })
+        let hash_to_match = sha1(&nonce.to_be_bytes());
+        (Nonce::MIN..=Nonce::MAX).into_par_iter().find_first(|n| {
+            hash_to_match == sha1(&n.to_be_bytes())
+        });
+    }
 }
