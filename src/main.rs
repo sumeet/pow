@@ -1,5 +1,4 @@
 use sha1::{Sha1,Digest};
-use std::process::exit;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 type Nonce = u16;
